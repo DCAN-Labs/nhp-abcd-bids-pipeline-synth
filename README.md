@@ -1,4 +1,4 @@
-# nhp-abcd-bids-pipeline
+# nhp-abcd-bids-pipeline-synth
 The repository contains the [BIDS App](https://bids-apps.neuroimaging.io) for non-human primates (i.e., macaques),
 used to run the dcan-macaque-pipeline.
 
@@ -9,8 +9,8 @@ subject(s).
 ## Building the image
 To build the image, you need to clone this repo and initialize the submodules:
 ```{bash}
-git clone git@github.com:DCAN-Labs/nhp-abcd-bids-pipeline-Synth.git
-cd nhp-abcd-bids-pipeline-Synth
+git clone git@github.com:DCAN-Labs/nhp-abcd-bids-pipeline-synth.git
+cd nhp-abcd-bids-pipeline-synth
 git submodule update --init
 ```
 Once you have done this, you will also need to download the
@@ -24,7 +24,7 @@ existence of the `templates` folder under `scripts/dcan_macaque_pipeline/global/
 Building the docker image can be done
 by running `docker build` in the root project directory. To enable the multi-stage build specified in the `Dockerfile` you can set `DOCKER_BUILDKIT=1`:
 ```{bash}
-DOCKER_BUILDKIT=1 docker build . -t dcanumn/nhp-abcd-bids-pipeline-Synth:[tag]
+DOCKER_BUILDKIT=1 docker build . -t dcanumn/nhp-abcd-bids-pipeline-synth:[tag]
 ```
 where `[tag]` is an optional tag to give the image.
 
@@ -32,7 +32,7 @@ where `[tag]` is an optional tag to give the image.
 Before running, you will need to load the image onto your Docker service by
 running the following command:
 ```{bash}
-docker pull dcanumn/nhp-abcd-bids-pipeline-Synth
+docker pull dcanumn/nhp-abcd-bids-pipeline-synth
 ```
 If you receive a "no space left on device" error during this pull process, you
 may need to clean up any old/dangling images and containers from the docker
@@ -41,7 +41,7 @@ registry, and possibly increase the amount of space allocated to Docker.
 ## Using Singularity (/Apptainer)
 You pull the image from the Docker Hub repository:
 ```{bash}
-singularity pull nhp-abcd-bids-pipeline-Synth.sif docker://dcanumn/nhp-abcd-bids-pipeline-Synth
+singularity pull nhp-abcd-bids-pipeline-synth.sif docker://dcanumn/nhp-abcd-bids-pipeline-synth
 ```
 
 
@@ -59,7 +59,7 @@ docker run --rm \
     -v /path/to/bids_dataset:/bids_input:ro \
     -v /path/to/outputs:/output \
     -v /path/to/freesurfer/license:/license \
-    dcanumn/nhp-abcd-bids-pipeline-Synth /bids_input /output
+    dcanumn/nhp-abcd-bids-pipeline-synth /bids_input /output
     --freesurfer-license=/license [OPTIONS]
 ```
 Notice that the FreeSurfer license is now mounted directly into the FreeSurfer
@@ -71,7 +71,7 @@ env -i singularity run \
     -B /path/to/bids_dataset:/bids_input \
     -B /path/to/outputs:/output \
     -B /path/to/freesurfer/license.txt:/opt/freesurfer/license.txt \
-    ./nhp-abcd-bids-pipeline-Synth.sif /bids_input /output
+    ./nhp-abcd-bids-pipeline-synth.sif /bids_input /output
 --freesurfer-license=/opt/freesurfer/license.txt [OPTIONS]
 ```
 Notice that the license is now mounted directly into the freesurfer folder, and
@@ -285,7 +285,7 @@ This repository contains the Dockerfile (and other files) needed to create the
 docker image that will contain the BIDs app and the pipeline scripts. This version
 does not require a ready-built DCAN-Labs internal-tools as prior releases have; the
 contents of the internal-tools Dockerfile are now integrated into
-the nhp-abcd-bids-pipeline-Synth Dockerfile.
+the nhp-abcd-bids-pipeline-synth Dockerfile.
 
 ### Additional Information:
 
