@@ -96,7 +96,7 @@ class ParameterSettings(object):
 
     # @ bold processing defaults @ #
     # brain radius of subject set
-    brain_radius = 50
+    brain_radius = 25
     # threshold for valid signal regression frames.
     fd_threshold = 0.3
     # bold signal temporal bandpass filter parameters
