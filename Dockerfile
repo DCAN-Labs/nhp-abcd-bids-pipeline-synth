@@ -86,7 +86,7 @@ RUN echo "Downloading FreeSurfer ..." && \
 # Install MATLAB Compiler Runtime
 FROM base as mcr
 RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
-RUN wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
+    wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
     && unzip MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
     && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
     && rm -rf /opt/mcr_download
