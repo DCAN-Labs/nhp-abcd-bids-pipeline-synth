@@ -20,6 +20,20 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     rm Python-3.9.13.tgz && cd Python-3.9.13 && ./configure --enable-optimizations && make altinstall && \
     cd .. && rm -rf Python-3.9.13
 
+# Install MATLAB Compiler Runtime
+FROM base as mcr
+RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
+    wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
+    && unzip MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
+    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
+    && rm -rf /opt/mcr_download
+
+# install fsl
+FROM base as fsl
+RUN echo "Downloading FSL ..." && \
+    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
+    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py -V 6.0.7.9 --throttle_downloads
+
 # install ants
 FROM base as ants
 RUN echo "Downloading ANTs ..." && \ 
@@ -28,12 +42,6 @@ RUN echo "Downloading ANTs ..." && \
     chmod +x /opt/ANTs/installANTs.sh && /opt/ANTs/installANTs.sh && rm installANTs.sh && \
     rm -rf /opt/ANTs/ANTs && rm -rf /opt/ANTs/build && rm -rf /opt/ANTs/install/lib && \
     mv /opt/ANTs/install/bin /opt/ANTs/bin && rm -rf /opt/ANTs/install
-
-# install fsl
-FROM base as fsl
-RUN echo "Downloading FSL ..." && \
-    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
-    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py
 
 # install afni
 FROM base as afni
@@ -82,14 +90,6 @@ RUN echo "Downloading FreeSurfer ..." && \
     --exclude='freesurfer/subjects/fsaverage6' \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/trctrain'
-
-# Install MATLAB Compiler Runtime
-FROM base as mcr
-RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
-    wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
-    && unzip MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
-    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
-    && rm -rf /opt/mcr_download
 
 # Install MSM Binaries
 FROM base as msm
