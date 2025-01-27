@@ -16,9 +16,9 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     apt-get update && rm /usr/share/keyrings/kitware-archive-keyring.gpg && \
     apt-get install -y kitware-archive-keyring cmake && \
     # install python3.9
-    curl -O https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz && tar xvf Python-3.9.13.tgz && \
-    rm Python-3.9.13.tgz && cd Python-3.9.13 && ./configure --enable-optimizations && make altinstall && \
-    cd .. && rm -rf Python-3.9.13
+    curl -O https://www.python.org/ftp/python/3.10.16/Python-3.10.16.tgz && tar xvf Python-3.10.16.tgz && \
+    rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
+    cd .. && rm -rf Python-3.10.16
 
 # Install MATLAB Compiler Runtime
 FROM base as mcr
