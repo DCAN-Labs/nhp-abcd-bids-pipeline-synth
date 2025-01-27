@@ -31,8 +31,8 @@ RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
 # install fsl
 FROM base as fsl
 RUN echo "Downloading FSL ..." && \
-    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -V 6.0.7.9 --throttle_downloads && \
-    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py 
+    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
+    python2 fslinstaller.py -V 6.0.7.9 --throttle_downloads -d /opt/fsl && rm fslinstaller.py 
 
 # install ants
 FROM base as ants
