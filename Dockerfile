@@ -30,9 +30,12 @@ RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
 
 # install fsl
 FROM base as fsl
+#RUN echo "Downloading FSL ..." && \
+#    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
+#    python2 fslinstaller.py -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py
 RUN echo "Downloading FSL ..." && \
-    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
-    python fslinstaller.py -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py 
+    curl -O https://s3.msi.umn.edu/tmadison-public/fslinstaller.py && \
+    python2 fslinstaller.py -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py 
 
 # install ants
 FROM base as ants
