@@ -16,9 +16,26 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     apt-get update && rm /usr/share/keyrings/kitware-archive-keyring.gpg && \
     apt-get install -y kitware-archive-keyring cmake && \
     # install python3.9
-    curl -O https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz && tar xvf Python-3.9.13.tgz && \
-    rm Python-3.9.13.tgz && cd Python-3.9.13 && ./configure --enable-optimizations && make altinstall && \
-    cd .. && rm -rf Python-3.9.13
+    curl -O https://www.python.org/ftp/python/3.10.16/Python-3.10.16.tgz && tar xvf Python-3.10.16.tgz && \
+    rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
+    cd .. && rm -rf Python-3.10.16
+
+# Install MATLAB Compiler Runtime
+FROM base as mcr
+RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
+    wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
+    && unzip MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
+    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
+    && rm -rf /opt/mcr_download
+
+# install fsl
+FROM base as fsl
+#RUN echo "Downloading FSL ..." && \
+#    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
+#    python2 fslinstaller.py -V 6.0.7.9 -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py
+RUN echo "Downloading FSL ..." && \
+    curl -O https://s3.msi.umn.edu/tmadison-public/fslinstaller.py && \
+    python2 fslinstaller.py -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py 
 
 # install ants
 FROM base as ants
@@ -28,12 +45,6 @@ RUN echo "Downloading ANTs ..." && \
     chmod +x /opt/ANTs/installANTs.sh && /opt/ANTs/installANTs.sh && rm installANTs.sh && \
     rm -rf /opt/ANTs/ANTs && rm -rf /opt/ANTs/build && rm -rf /opt/ANTs/install/lib && \
     mv /opt/ANTs/install/bin /opt/ANTs/bin && rm -rf /opt/ANTs/install
-
-# install fsl
-FROM base as fsl
-RUN echo "Downloading FSL ..." && \
-    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
-    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py
 
 # install afni
 FROM base as afni
@@ -83,14 +94,6 @@ RUN echo "Downloading FreeSurfer ..." && \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/trctrain'
 
-# Install MATLAB Compiler Runtime
-FROM base as mcr
-RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
-    wget https://ssd.mathworks.com/supportfiles/downloads/R2016b/deployment_files/R2016b/installers/glnxa64/MCR_R2016b_glnxa64_installer.zip \
-    && unzip MCR_R2016b_glnxa64_installer.zip \
-    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
-    && rm -rf /opt/mcr_download
-
 # Install MSM Binaries
 FROM base as msm
 RUN echo "Downloading msm ..." && \
@@ -112,7 +115,7 @@ RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
     git clone -b v2.2.10 --single-branch --depth 1 https://github.com/DCAN-Labs/ExecutiveSummary.git executivesummary && \
     gunzip /opt/dcan-tools/executivesummary/templates/parasagittal_Tx_169_template.scene.gz && \
     # dcan custom clean
-    git clone -b v0.0.0 --single-branch --depth 1 https://github.com/DCAN-Labs/CustomClean.git customclean && \
+    git clone -b v2.0.3 --single-branch --depth 1 https://github.com/DCAN-Labs/CustomClean.git customclean && \
     # dcan file mapper
     git clone -b v1.3.0 --single-branch --depth 1 https://github.com/DCAN-Labs/file-mapper.git filemapper && \
     printf "{\n  \"VERSION\": \"development\"\n}\n" > /opt/dcan-tools/version.json
@@ -178,7 +181,7 @@ ENV MSMBINDIR=/opt/msm/Ubuntu
 ENV OMP_NUM_THREADS=8 SCRATCHDIR=/tmp/scratch ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=8 TMPDIR=/tmp
 
 # Fix libstdc++6 error
-RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v91/sys/os/glnxa64/libstdc++.so.6
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v96/sys/os/glnxa64/libstdc++.so.6
 
 # install omni
 RUN python3.9 -m pip install omnineuro==2022.8.1
