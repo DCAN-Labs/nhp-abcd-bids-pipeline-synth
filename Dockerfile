@@ -35,7 +35,7 @@ RUN echo "Downloading FSL ..." && \
     python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py
 #RUN echo "Downloading FSL ..." && \
 #    curl -O https://s3.msi.umn.edu/tmadison-public/fslinstaller.py && \
-#    python2 fslinstaller.py -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py 
+#    python2 fslinstaller.py -a https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/manifest-6.0.7.9.json -d /opt/fsl && cat /tmp/fslinstaller*.log && rm fslinstaller.py 
 
 # install ants
 FROM base as ants
