@@ -20,34 +20,6 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
     cd .. && rm -rf Python-3.10.16
 
-# Install MATLAB Compiler Runtime
-FROM base as mcr
-RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
-    wget https://ssd.mathworks.com/supportfiles/downloads/R2019a/Release/9/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
-    && unzip MATLAB_Runtime_R2019a_Update_9_glnxa64.zip \
-    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
-    && rm -rf /opt/mcr_download
-
-# install fsl
-FROM base as fsl
-#RUN echo "Downloading FSL ..." && \
-#    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
-#    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py
-RUN echo "Downloading FSL ..." && \
-    curl -O https://s3.msi.umn.edu/tmadison-public/fslinstaller.py && \
-    python2 fslinstaller.py --manifest https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/manifest-6.0.7.9.json -d /opt/fsl &&  rm fslinstaller.py
-
- 
-
-# install ants
-FROM base as ants
-RUN echo "Downloading ANTs ..." && \ 
-    mkdir -p /opt/ANTs && cd /opt/ANTs && \
-    curl -O https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh && \
-    chmod +x /opt/ANTs/installANTs.sh && /opt/ANTs/installANTs.sh && rm installANTs.sh && \
-    rm -rf /opt/ANTs/ANTs && rm -rf /opt/ANTs/build && rm -rf /opt/ANTs/install/lib && \
-    mv /opt/ANTs/install/bin /opt/ANTs/bin && rm -rf /opt/ANTs/install
-
 # install afni
 FROM base as afni
 RUN echo "Downloading AFNI ..." && \
@@ -67,34 +39,6 @@ RUN echo "Downloading Convert3d ..." && \
     mkdir /opt/c3d && \
     curl -sSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
     | tar -xzC /opt/c3d --strip-components=1
-
-# install freesurfer
-FROM base as freesurfer
-# Make libnetcdf
-RUN echo "Downloading libnetcdf ..." && \
-    curl -sSL --retry 5 https://github.com/Unidata/netcdf-c/archive/v4.6.1.tar.gz | tar zx -C /opt && \
-    cd /opt/netcdf-c-4.6.1/ && \
-    LDFLAGS=-L/usr/local/lib && CPPFLAGS=-I/usr/local/include && ./configure --disable-netcdf-4 --disable-dap \
-    --enable-shared --prefix=/usr/local && \
-    make && make install && \
-    rm -rf /opt/netcdf-c-4.6.1/ && ldconfig
-# Install FreeSurfer v5.3.0-HCP
-RUN echo "Downloading FreeSurfer ..." && \
-    curl -sSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/5.3.0-HCP/freesurfer-Linux-centos6_x86_64-stable-pub-v5.3.0-HCP.tar.gz \
-    | tar xz -C /opt \
-    --exclude='freesurfer/average/mult-comp-cor' \
-    --exclude='freesurfer/lib/cuda' \
-    --exclude='freesurfer/lib/qt' \
-    --exclude='freesurfer/subjects/V1_average' \
-    --exclude='freesurfer/subjects/bert' \
-    --exclude='freesurfer/subjects/cvs_avg35' \
-    --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
-    --exclude='freesurfer/subjects/fsaverage3' \
-    --exclude='freesurfer/subjects/fsaverage4' \
-    --exclude='freesurfer/subjects/fsaverage5' \
-    --exclude='freesurfer/subjects/fsaverage6' \
-    --exclude='freesurfer/subjects/fsaverage_sym' \
-    --exclude='freesurfer/trctrain'
 
 # Install MSM Binaries
 FROM base as msm
@@ -127,24 +71,22 @@ COPY ["scripts/dcan_bold_processing", "/opt/dcan-tools/dcan_bold_proc"]
 ######################################################################################################################
 
 # finalize build
-FROM base as final
+# FROM dcanumn/external-software-nhp-synth:docker-build-split as final
+
+FROM dcanumn/external-software-nhp-synth:ants-only as ants
+FROM dcanumn/external-software-nhp-synth:fsl-only as fsl
+FROM dcanumn/external-software-nhp-synth:mcr-only as mcr
 
 # copy dependencies from other images
-RUN mkdir -p /opt/ANTs
-COPY --from=ants /opt/ANTs/bin /opt/ANTs/bin
-COPY --from=fsl /opt/fsl /opt/fsl
 COPY --from=afni /opt/afni /opt/afni
 COPY --from=connectome-workbench /opt/workbench /opt/workbench
 COPY --from=convert3d /opt/c3d /opt/c3d
-COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
-COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
-COPY --from=mcr /opt/mcr /opt/mcr
 COPY --from=msm /opt/msm /opt/msm
 COPY --from=perl /opt/perl /opt/perl
 COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
 
 # alias python3.9 to python3
-RUN ln -s /usr/local/bin/python3.9 /usr/bin/python3
+RUN ln -s /usr/local/bin/python3.10 /usr/bin/python3
 
 # install python2 stuff
 RUN pip2 install pyyaml numpy pillow
@@ -186,7 +128,7 @@ ENV OMP_NUM_THREADS=8 SCRATCHDIR=/tmp/scratch ITK_GLOBAL_DEFAULT_NUMBER_OF_THREA
 RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v96/sys/os/glnxa64/libstdc++.so.6
 
 # install omni
-RUN python3.9 -m pip install omnineuro==2022.8.1
+RUN python3.10 -m pip install omnineuro==2022.8.1
 
 # copy DCAN pipeline
 COPY ["scripts/dcan_macaque_pipeline", "/opt/pipeline"]
@@ -199,7 +141,7 @@ COPY ["pyproject.toml", "README.md", "LICENSE", "MANIFEST.in", \
 
 # install this repo
 RUN cd /opt/nhp-abcd-bids-pipeline && \
-    python3.9 -m pip install .
+    python3.10 -m pip install .
 
 # make some directories
 RUN mkdir /bids_input /output /atlases
