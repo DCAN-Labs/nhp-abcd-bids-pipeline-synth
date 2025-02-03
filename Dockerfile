@@ -20,6 +20,35 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
     cd .. && rm -rf Python-3.10.16
 
+# install freesurfer
+FROM base as freesurfer
+# Make libnetcdf
+RUN echo "Downloading libnetcdf ..." && \
+    curl -sSL --retry 5 https://github.com/Unidata/netcdf-c/archive/v4.6.1.tar.gz | tar zx -C /opt && \
+    cd /opt/netcdf-c-4.6.1/ && \
+    LDFLAGS=-L/usr/local/lib && CPPFLAGS=-I/usr/local/include && ./configure --disable-netcdf-4 --disable-dap \
+    --enable-shared --prefix=/usr/local && \
+    make && make install && \
+    rm -rf /opt/netcdf-c-4.6.1/ && ldconfig
+
+# Install FreeSurfer v5.3.0-HCP
+RUN echo "Downloading FreeSurfer ..." && \
+    curl -sSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/5.3.0-HCP/freesurfer-Linux-centos6_x86_64-stable-pub-v5.3.0-HCP.tar.gz \
+    | tar xz -C /opt \
+    --exclude='freesurfer/average/mult-comp-cor' \
+    --exclude='freesurfer/lib/cuda' \
+    --exclude='freesurfer/lib/qt' \
+    --exclude='freesurfer/subjects/V1_average' \
+    --exclude='freesurfer/subjects/bert' \
+    --exclude='freesurfer/subjects/cvs_avg35' \
+    --exclude='freesurfer/subjects/cvs_avg35_inMNI152' \
+    --exclude='freesurfer/subjects/fsaverage3' \
+    --exclude='freesurfer/subjects/fsaverage4' \
+    --exclude='freesurfer/subjects/fsaverage5' \
+    --exclude='freesurfer/subjects/fsaverage6' \
+    --exclude='freesurfer/subjects/fsaverage_sym' \
+    --exclude='freesurfer/trctrain'
+
 # install afni
 FROM base as afni
 RUN echo "Downloading AFNI ..." && \
@@ -82,6 +111,8 @@ COPY --from=afni /opt/afni /opt/afni
 COPY --from=connectome-workbench /opt/workbench /opt/workbench
 COPY --from=convert3d /opt/c3d /opt/c3d
 COPY --from=msm /opt/msm /opt/msm
+COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
+COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
 COPY --from=perl /opt/perl /opt/perl
 COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
 
