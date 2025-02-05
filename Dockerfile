@@ -104,10 +104,9 @@ FROM base as final
 
 # copy dependencies from other images
 RUN mkdir -p /opt/ANTs
-COPY --from=dcanumn/external-software-nhp-synth:ants-only /opt/ANTs/bin /opt/ANTs/bin
-COPY --from=dcanumn/external-software-nhp-synth:fsl-only /opt/fsl /opt/fsl
-COPY --from=dcanumn/external-software-nhp-synth:mcr-only /opt/mcr /opt/mcr
-
+COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/ANTs/bin /opt/ANTs/bin
+COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/fsl /opt/fsl
+COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/mcr /opt/mcr
 COPY --from=afni /opt/afni /opt/afni
 COPY --from=connectome-workbench /opt/workbench /opt/workbench
 COPY --from=convert3d /opt/c3d /opt/c3d
