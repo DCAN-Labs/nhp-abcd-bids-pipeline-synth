@@ -20,8 +20,30 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
     cd .. && rm -rf Python-3.10.16
 
+# Make perl version 5.20.3
+RUN echo "Downloading perl ..." && \
+    curl -sSL --retry 5 http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz | tar zx -C /opt && \
+    mkdir -p /opt/perl && cd /opt/perl-5.20.3 && ./Configure -des -Dprefix=/opt/perl && make && make install
+######################################################################################################################
+
+# finalize build
+# FROM base as final
+
+# copy dependencies from other images
+RUN mkdir -p /opt/ANTs
+COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt /opt
+# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/fsl /opt/fsl
+# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/mcr /opt/mcr
+#COPY --from=afni /opt/afni /opt/afni
+#COPY --from=connectome-workbench /opt/workbench /opt/workbench
+#COPY --from=convert3d /opt/c3d /opt/c3d
+#COPY --from=msm /opt/msm /opt/msm
+#COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
+#COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
+#COPY --from=perl /opt/perl /opt/perl
+#COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
+
 # install freesurfer
-FROM base as freesurfer
 # Make libnetcdf
 RUN echo "Downloading libnetcdf ..." && \
     curl -sSL --retry 5 https://github.com/Unidata/netcdf-c/archive/v4.6.1.tar.gz | tar zx -C /opt && \
@@ -50,41 +72,30 @@ RUN echo "Downloading FreeSurfer ..." && \
     --exclude='freesurfer/trctrain'
 
 # install afni
-FROM base as afni
 RUN echo "Downloading AFNI ..." && \
     mkdir -p /opt/afni && cd /opt/afni && \
     curl -O https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz && \
     tar xvf linux_ubuntu_16_64.tgz && rm linux_ubuntu_16_64.tgz
 
 # install connectome workbench
-FROM base as connectome-workbench
 RUN echo "Downloading Connectome Workbench" && \
     curl -O https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v1.5.0.zip && \
     unzip workbench-linux64-v1.5.0.zip && rm workbench-linux64-v1.5.0.zip
 
 # install convert3d
-FROM base as convert3d
 RUN echo "Downloading Convert3d ..." && \
     mkdir /opt/c3d && \
     curl -sSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
     | tar -xzC /opt/c3d --strip-components=1
 
 # Install MSM Binaries
-FROM base as msm
 RUN echo "Downloading msm ..." && \
     mkdir /opt/msm && \
     curl -ksSL --retry 5 https://www.doc.ic.ac.uk/~ecr05/MSM_HOCR_v2/MSM_HOCR_v2-download.tgz | tar zx -C /opt && \
     mv /opt/homes/ecr05/MSM_HOCR_v2/* /opt/msm/ && \
     rm -rf /opt/homes /opt/msm/MacOSX /opt/msm/Centos
 
-# Make perl version 5.20.3
-FROM base as perl
-RUN echo "Downloading perl ..." && \
-    curl -sSL --retry 5 http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz | tar zx -C /opt && \
-    mkdir -p /opt/perl && cd /opt/perl-5.20.3 && ./Configure -des -Dprefix=/opt/perl && make && make install
-
 # DCAN tools
-FROM base as dcan-tools
 RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
     # dcan executive summary
     git clone -b v2.2.10 --single-branch --depth 1 https://github.com/DCAN-Labs/ExecutiveSummary.git executivesummary && \
@@ -96,25 +107,6 @@ RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
     printf "{\n  \"VERSION\": \"development\"\n}\n" > /opt/dcan-tools/version.json
 # dcan bold processing
 COPY ["scripts/dcan_bold_processing", "/opt/dcan-tools/dcan_bold_proc"]
-
-######################################################################################################################
-
-# finalize build
-FROM base as final
-
-# copy dependencies from other images
-RUN mkdir -p /opt/ANTs
-COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt /opt
-# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/fsl /opt/fsl
-# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/mcr /opt/mcr
-COPY --from=afni /opt/afni /opt/afni
-COPY --from=connectome-workbench /opt/workbench /opt/workbench
-COPY --from=convert3d /opt/c3d /opt/c3d
-COPY --from=msm /opt/msm /opt/msm
-COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
-COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
-COPY --from=perl /opt/perl /opt/perl
-COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
 
 # alias python3.9 to python3
 RUN ln -s /usr/local/bin/python3.10 /usr/bin/python3
