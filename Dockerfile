@@ -151,7 +151,7 @@ ENV OMP_NUM_THREADS=8 SCRATCHDIR=/tmp/scratch ITK_GLOBAL_DEFAULT_NUMBER_OF_THREA
 RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v96/sys/os/glnxa64/libstdc++.so.6
 
 # install omni
-RUN python3.10 -m pip install omnineuro==2022.8.1
+RUN python3.10 -m pip install -vvv omnineuro==2022.8.1
 
 # copy DCAN pipeline
 COPY ["scripts/dcan_macaque_pipeline", "/opt/pipeline"]
@@ -164,7 +164,7 @@ COPY ["pyproject.toml", "README.md", "LICENSE", "MANIFEST.in", \
 
 # install this repo
 RUN cd /opt/nhp-abcd-bids-pipeline && \
-    python3.10 -m pip install .
+    python3.10 -m pip install -vvv .
 
 # make some directories
 RUN mkdir /bids_input /output /atlases
