@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     | tee /etc/apt/sources.list.d/kitware.list >/dev/null && \
     apt-get update && rm /usr/share/keyrings/kitware-archive-keyring.gpg && \
     apt-get install -y kitware-archive-keyring cmake && \
-    # install python3.9
+    # install python3.10
     curl -O https://www.python.org/ftp/python/3.10.16/Python-3.10.16.tgz && tar xvf Python-3.10.16.tgz && \
     rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
     cd .. && rm -rf Python-3.10.16
@@ -26,22 +26,10 @@ RUN echo "Downloading perl ..." && \
     mkdir -p /opt/perl && cd /opt/perl-5.20.3 && ./Configure -des -Dprefix=/opt/perl && make && make install
 ######################################################################################################################
 
-# finalize build
-# FROM base as final
 
 # copy dependencies from other images
 RUN mkdir -p /opt/ANTs
-COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt /opt
-# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/fsl /opt/fsl
-# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/mcr /opt/mcr
-#COPY --from=afni /opt/afni /opt/afni
-#COPY --from=connectome-workbench /opt/workbench /opt/workbench
-#COPY --from=convert3d /opt/c3d /opt/c3d
-#COPY --from=msm /opt/msm /opt/msm
-#COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
-#COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
-#COPY --from=perl /opt/perl /opt/perl
-#COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
+COPY --from=dcanumn/external-software-nhp-synth:v1.0.0 /opt /opt
 
 # install freesurfer
 # Make libnetcdf
@@ -108,7 +96,7 @@ RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
 # dcan bold processing
 COPY ["scripts/dcan_bold_processing", "/opt/dcan-tools/dcan_bold_proc"]
 
-# alias python3.9 to python3
+# alias python3.10 to python3
 RUN ln -s /usr/local/bin/python3.10 /usr/bin/python3
 
 # install python2 stuff
