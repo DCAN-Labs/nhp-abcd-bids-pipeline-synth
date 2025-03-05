@@ -16,47 +16,34 @@ RUN apt-get update && apt-get install -y build-essential gpg wget m4 libglu1-mes
     apt-get update && rm /usr/share/keyrings/kitware-archive-keyring.gpg && \
     apt-get install -y kitware-archive-keyring cmake && \
     # install python3.9
-    curl -O https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz && tar xvf Python-3.9.13.tgz && \
-    rm Python-3.9.13.tgz && cd Python-3.9.13 && ./configure --enable-optimizations && make altinstall && \
-    cd .. && rm -rf Python-3.9.13
+    curl -O https://www.python.org/ftp/python/3.10.16/Python-3.10.16.tgz && tar xvf Python-3.10.16.tgz && \
+    rm Python-3.10.16.tgz && cd Python-3.10.16 && ./configure --enable-optimizations && make altinstall && \
+    cd .. && rm -rf Python-3.10.16
 
-# install ants
-FROM base as ants
-RUN echo "Downloading ANTs ..." && \ 
-    mkdir -p /opt/ANTs && cd /opt/ANTs && \
-    curl -O https://raw.githubusercontent.com/cookpa/antsInstallExample/master/installANTs.sh && \
-    chmod +x /opt/ANTs/installANTs.sh && /opt/ANTs/installANTs.sh && rm installANTs.sh && \
-    rm -rf /opt/ANTs/ANTs && rm -rf /opt/ANTs/build && rm -rf /opt/ANTs/install/lib && \
-    mv /opt/ANTs/install/bin /opt/ANTs/bin && rm -rf /opt/ANTs/install
+# Make perl version 5.20.3
+RUN echo "Downloading perl ..." && \
+    curl -sSL --retry 5 http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz | tar zx -C /opt && \
+    mkdir -p /opt/perl && cd /opt/perl-5.20.3 && ./Configure -des -Dprefix=/opt/perl && make && make install
+######################################################################################################################
 
-# install fsl
-FROM base as fsl
-RUN echo "Downloading FSL ..." && \
-    curl -O https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py && \
-    python2 fslinstaller.py -d /opt/fsl && rm fslinstaller.py
+# finalize build
+# FROM base as final
 
-# install afni
-FROM base as afni
-RUN echo "Downloading AFNI ..." && \
-    mkdir -p /opt/afni && cd /opt/afni && \
-    curl -O https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz && \
-    tar xvf linux_ubuntu_16_64.tgz && rm linux_ubuntu_16_64.tgz
-
-# install connectome workbench
-FROM base as connectome-workbench
-RUN echo "Downloading Connectome Workbench" && \
-    curl -O https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v1.5.0.zip && \
-    unzip workbench-linux64-v1.5.0.zip && rm workbench-linux64-v1.5.0.zip
-
-# install convert3d
-FROM base as convert3d
-RUN echo "Downloading Convert3d ..." && \
-    mkdir /opt/c3d && \
-    curl -sSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
-    | tar -xzC /opt/c3d --strip-components=1
+# copy dependencies from other images
+RUN mkdir -p /opt/ANTs
+COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt /opt
+# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/fsl /opt/fsl
+# COPY --from=dcanumn/external-software-nhp-synth:docker-build-split /opt/mcr /opt/mcr
+#COPY --from=afni /opt/afni /opt/afni
+#COPY --from=connectome-workbench /opt/workbench /opt/workbench
+#COPY --from=convert3d /opt/c3d /opt/c3d
+#COPY --from=msm /opt/msm /opt/msm
+#COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
+#COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
+#COPY --from=perl /opt/perl /opt/perl
+#COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
 
 # install freesurfer
-FROM base as freesurfer
 # Make libnetcdf
 RUN echo "Downloading libnetcdf ..." && \
     curl -sSL --retry 5 https://github.com/Unidata/netcdf-c/archive/v4.6.1.tar.gz | tar zx -C /opt && \
@@ -65,6 +52,7 @@ RUN echo "Downloading libnetcdf ..." && \
     --enable-shared --prefix=/usr/local && \
     make && make install && \
     rm -rf /opt/netcdf-c-4.6.1/ && ldconfig
+
 # Install FreeSurfer v5.3.0-HCP
 RUN echo "Downloading FreeSurfer ..." && \
     curl -sSL --retry 5 https://surfer.nmr.mgh.harvard.edu/pub/dist/freesurfer/5.3.0-HCP/freesurfer-Linux-centos6_x86_64-stable-pub-v5.3.0-HCP.tar.gz \
@@ -83,63 +71,45 @@ RUN echo "Downloading FreeSurfer ..." && \
     --exclude='freesurfer/subjects/fsaverage_sym' \
     --exclude='freesurfer/trctrain'
 
-# Install MATLAB Compiler Runtime
-FROM base as mcr
-RUN mkdir /opt/mcr /opt/mcr_download && cd /opt/mcr_download && \
-    wget https://ssd.mathworks.com/supportfiles/downloads/R2016b/deployment_files/R2016b/installers/glnxa64/MCR_R2016b_glnxa64_installer.zip \
-    && unzip MCR_R2016b_glnxa64_installer.zip \
-    && ./install -agreeToLicense yes -mode silent -destinationFolder /opt/mcr \
-    && rm -rf /opt/mcr_download
+# install afni
+RUN echo "Downloading AFNI ..." && \
+    mkdir -p /opt/afni && cd /opt/afni && \
+    curl -O https://afni.nimh.nih.gov/pub/dist/tgz/linux_ubuntu_16_64.tgz && \
+    tar xvf linux_ubuntu_16_64.tgz && rm linux_ubuntu_16_64.tgz
+
+# install connectome workbench
+RUN echo "Downloading Connectome Workbench" && \
+    curl -O https://www.humanconnectome.org/storage/app/media/workbench/workbench-linux64-v1.5.0.zip && \
+    unzip workbench-linux64-v1.5.0.zip && rm workbench-linux64-v1.5.0.zip
+
+# install convert3d
+RUN echo "Downloading Convert3d ..." && \
+    mkdir /opt/c3d && \
+    curl -sSL --retry 5 https://sourceforge.net/projects/c3d/files/c3d/1.0.0/c3d-1.0.0-Linux-x86_64.tar.gz/download \
+    | tar -xzC /opt/c3d --strip-components=1
 
 # Install MSM Binaries
-FROM base as msm
 RUN echo "Downloading msm ..." && \
     mkdir /opt/msm && \
     curl -ksSL --retry 5 https://www.doc.ic.ac.uk/~ecr05/MSM_HOCR_v2/MSM_HOCR_v2-download.tgz | tar zx -C /opt && \
     mv /opt/homes/ecr05/MSM_HOCR_v2/* /opt/msm/ && \
     rm -rf /opt/homes /opt/msm/MacOSX /opt/msm/Centos
 
-# Make perl version 5.20.3
-FROM base as perl
-RUN echo "Downloading perl ..." && \
-    curl -sSL --retry 5 http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz | tar zx -C /opt && \
-    mkdir -p /opt/perl && cd /opt/perl-5.20.3 && ./Configure -des -Dprefix=/opt/perl && make && make install
-
 # DCAN tools
-FROM base as dcan-tools
 RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
     # dcan executive summary
     git clone -b v2.2.10 --single-branch --depth 1 https://github.com/DCAN-Labs/ExecutiveSummary.git executivesummary && \
     gunzip /opt/dcan-tools/executivesummary/templates/parasagittal_Tx_169_template.scene.gz && \
     # dcan custom clean
-    git clone -b v0.0.0 --single-branch --depth 1 https://github.com/DCAN-Labs/CustomClean.git customclean && \
+    git clone -b v2.0.3 --single-branch --depth 1 https://github.com/DCAN-Labs/CustomClean.git customclean && \
     # dcan file mapper
     git clone -b v1.3.0 --single-branch --depth 1 https://github.com/DCAN-Labs/file-mapper.git filemapper && \
     printf "{\n  \"VERSION\": \"development\"\n}\n" > /opt/dcan-tools/version.json
 # dcan bold processing
 COPY ["scripts/dcan_bold_processing", "/opt/dcan-tools/dcan_bold_proc"]
 
-######################################################################################################################
-
-# finalize build
-FROM base as final
-
-# copy dependencies from other images
-RUN mkdir -p /opt/ANTs
-COPY --from=ants /opt/ANTs/bin /opt/ANTs/bin
-COPY --from=fsl /opt/fsl /opt/fsl
-COPY --from=afni /opt/afni /opt/afni
-COPY --from=connectome-workbench /opt/workbench /opt/workbench
-COPY --from=convert3d /opt/c3d /opt/c3d
-COPY --from=freesurfer /usr/local/lib/libnetcdf* /usr/local/lib/
-COPY --from=freesurfer /opt/freesurfer /opt/freesurfer
-COPY --from=mcr /opt/mcr /opt/mcr
-COPY --from=msm /opt/msm /opt/msm
-COPY --from=perl /opt/perl /opt/perl
-COPY --from=dcan-tools /opt/dcan-tools /opt/dcan-tools
-
 # alias python3.9 to python3
-RUN ln -s /usr/local/bin/python3.9 /usr/bin/python3
+RUN ln -s /usr/local/bin/python3.10 /usr/bin/python3
 
 # install python2 stuff
 RUN pip2 install pyyaml numpy pillow
@@ -178,10 +148,10 @@ ENV MSMBINDIR=/opt/msm/Ubuntu
 ENV OMP_NUM_THREADS=8 SCRATCHDIR=/tmp/scratch ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=8 TMPDIR=/tmp
 
 # Fix libstdc++6 error
-RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v91/sys/os/glnxa64/libstdc++.so.6
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.25 /opt/mcr/v96/sys/os/glnxa64/libstdc++.so.6
 
 # install omni
-RUN python3.9 -m pip install omnineuro==2022.8.1
+RUN python3.10 -m pip install -vvv omnineuro==2022.8.1
 
 # copy DCAN pipeline
 COPY ["scripts/dcan_macaque_pipeline", "/opt/pipeline"]
@@ -194,7 +164,7 @@ COPY ["pyproject.toml", "README.md", "LICENSE", "MANIFEST.in", \
 
 # install this repo
 RUN cd /opt/nhp-abcd-bids-pipeline && \
-    python3.9 -m pip install .
+    python3.10 -m pip install -vvv .
 
 # make some directories
 RUN mkdir /bids_input /output /atlases

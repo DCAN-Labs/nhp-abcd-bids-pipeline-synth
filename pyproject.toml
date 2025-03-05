@@ -10,8 +10,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
-urls = { github = "https://github.com/DCAN-Labs/nhp-abcd-bids-pipeline" }
-dynamic = ["version", "entry-points"]
+urls = { github = "https://github.com/DCAN-Labs/nhp-abcd-bids-pipeline-synth" }
+dynamic = ["version", "entry-points", "scripts"]
 dependencies = ["memori >= 0.1.8", "nibabel >= 3.2.2", "numpy >= 1.22.4", "pybids >= 0.14.0"]
 
 [project.optional-dependencies]
