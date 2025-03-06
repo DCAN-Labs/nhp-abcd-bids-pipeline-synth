@@ -86,7 +86,7 @@ RUN echo "Downloading msm ..." && \
 # DCAN tools
 RUN mkdir /opt/dcan-tools && cd /opt/dcan-tools && \
     # dcan executive summary
-    git clone -b v2.2.10 --single-branch --depth 1 https://github.com/DCAN-Labs/ExecutiveSummary.git executivesummary && \
+    git clone -b v2.2.11 --single-branch --depth 1 https://github.com/DCAN-Labs/ExecutiveSummary.git executivesummary && \
     gunzip /opt/dcan-tools/executivesummary/templates/parasagittal_Tx_169_template.scene.gz && \
     # dcan custom clean
     git clone -b v2.0.3 --single-branch --depth 1 https://github.com/DCAN-Labs/CustomClean.git customclean && \
