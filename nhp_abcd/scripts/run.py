@@ -64,7 +64,9 @@ def _cli():
         args.collect,
         args.ncpus,
         args.stage,
+        arg.no_gsr,
         args.bandstop,
+        args.legacy_motion_filter,
         args.max_cortical_thickness,
         args.check_outputs_only,
         args.t1_brain_mask,
@@ -162,6 +164,13 @@ def generate_parser(parser=None):
         "FMRISurface, DCANBOLDProcessing, ExecutiveSummary",
     )
     parser.add_argument(
+        '--no-gsr',
+        action='store_true',
+        dest='no_gsr',
+        help='Disable global signal regression in DCANBOLDProcessing stage.'
+             'Default: False'
+    )
+    parser.add_argument(
         "--bandstop",
         type=float,
         nargs=2,
@@ -172,6 +181,15 @@ def generate_parser(parser=None):
         "bids physio data directly [3].  These parameters are highly "
         "recommended for data acquired with a frequency of approx. 1 Hz "
         "or more (TR<=1.0). Default is no filter",
+    )
+    parser.add_argument(
+        '--legacy-motion-filter',
+        action='store_true',
+        dest='legacy_motion_filter',
+        help='enable this to make band-stop motion filter behavior match that of '
+             'abcd-hcp-pipeline 0.1.x. Specifically, if using bidirectional '
+             'filter (filtfilt), the number of filter repetitions will be doubled '
+             'compared to running without this option. ' 
     )
     parser.add_argument(
         "--max-cortical-thickness",
@@ -389,6 +407,8 @@ def interface(
     registration_assist=None,
     freesurfer_license=None,
     skip_synth=False,
+    no_gsr=False,
+    legacy_motion_filter=False
 ):
     """
     main application interface
@@ -419,6 +439,8 @@ def interface(
     :param make_white_from_norm_t1: generate white surfaces in FreeSurfer from normalized T1w
     :param single_pass_pial: generate pial surfaces in FreeSurfer with a single pass of mris_make_surfaces instead of
     default two-pass method (using surfaces generated in first pass create priors)
+    :param no_gsr: disables global signal regression in DCANBOLDProcessing stage
+    :param legacy_motion_filter: enable for bandstop motion filter consistent with 0.2.x 
     :return:
     """
 
@@ -489,6 +511,12 @@ def interface(
 
         if bandstop_params is not None:
             boldproc.set_bandstop_filter(*bandstop_params)
+
+        if legacy_motion_filter:
+            boldproc.set_legacy_motion_filter(legacy_motion_filter)
+        
+        if no_gsr:
+            boldproc.set_no_gsr(no_gsr)
 
         # determine pipeline order
         order = [mask, pre, free, post, vol, surf, boldproc, execsum]
