@@ -438,7 +438,7 @@ def interface(
     template)
     :param make_white_from_norm_t1: generate white surfaces in FreeSurfer from normalized T1w
     :param single_pass_pial: generate pial surfaces in FreeSurfer with a single pass of mris_make_surfaces instead of
-    default two-pass method (using surfaces generated in first pass create priors)
+    default two-pass method (using surfaces generated in first pass as priors)
     :param no_gsr: disables global signal regression in DCANBOLDProcessing stage
     :param legacy_motion_filter: enable for bandstop motion filter consistent with 0.2.x 
     :return:
