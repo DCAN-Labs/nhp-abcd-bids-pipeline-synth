@@ -64,7 +64,7 @@ def _cli():
         args.collect,
         args.ncpus,
         args.stage,
-        arg.no_gsr,
+        args.no_gsr,
         args.bandstop,
         args.legacy_motion_filter,
         args.max_cortical_thickness,
