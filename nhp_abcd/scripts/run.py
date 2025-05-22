@@ -187,7 +187,7 @@ def generate_parser(parser=None):
         action='store_true',
         dest='legacy_motion_filter',
         help='enable this to make band-stop motion filter behavior match that of '
-             'abcd-hcp-pipeline 0.1.x. Specifically, if using bidirectional '
+             'nhp-abcd-bids-pipeline-synth 0.2.x. Specifically, if using bidirectional '
              'filter (filtfilt), the number of filter repetitions will be doubled '
              'compared to running without this option. ' 
     )
