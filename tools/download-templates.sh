@@ -6,7 +6,7 @@ PROJECT_DIR=$(dirname $(realpath $(dirname ${BASH_SOURCE[0]})))
 [ -d ${PROJECT_DIR}/scripts/dcan_macaque_pipeline/global/templates ] && \
     rm -rf ${PROJECT_DIR}/scripts/dcan_macaque_pipeline/global/templates
 # download templates to global
-curl -L https://wustl.box.com/shared/static/jnpz4ibgttwoeyz1bxyavrn8y4rgh37o.gz \
+curl -L https://s3.msi.umn.edu/dcan-macaque-templates/0.3.x/templates_03x.tar.gz \
     -o ${PROJECT_DIR}/scripts/dcan_macaque_pipeline/global/templates.tar.gz
 # unpack the files
 tar -xvf ${PROJECT_DIR}/scripts/dcan_macaque_pipeline/global/templates.tar.gz \
