@@ -387,7 +387,9 @@ def interface(
     collect=False,
     ncpus=1,
     start_stage=None,
+    no_gsr=False,
     bandstop_params=None,
+    legacy_motion_filter=False,
     max_cortical_thickness=5,
     check_only=False,
     t1_brain_mask=None,
@@ -407,8 +409,6 @@ def interface(
     registration_assist=None,
     freesurfer_license=None,
     skip_synth=False,
-    no_gsr=False,
-    legacy_motion_filter=False
 ):
     """
     main application interface
@@ -422,7 +422,9 @@ def interface(
     :param collect: treats each subject as having only one session.
     :param ncpus: number of cores for parallelized processing.
     :param start_stage: start from a given stage.
+    :param no_gsr: disables global signal regression in DCANBOLDProcessing stage
     :param bandstop_params: tuple of lower and upper bound for stop-band filter
+    :param legacy_motion_filter: enable for bandstop motion filter consistent with 0.2.x 
     :param max_cortical_thickness: maximum cortical thickness allowed in FreeSurfer.
     :param check_only: check expected outputs for each stage then terminate
     :param t1_brain_mask: specify mask to use instead of letting PreFreeSurfer create it.
@@ -439,8 +441,6 @@ def interface(
     :param make_white_from_norm_t1: generate white surfaces in FreeSurfer from normalized T1w
     :param single_pass_pial: generate pial surfaces in FreeSurfer with a single pass of mris_make_surfaces instead of
     default two-pass method (using surfaces generated in first pass as priors)
-    :param no_gsr: disables global signal regression in DCANBOLDProcessing stage
-    :param legacy_motion_filter: enable for bandstop motion filter consistent with 0.2.x 
     :return:
     """
 
